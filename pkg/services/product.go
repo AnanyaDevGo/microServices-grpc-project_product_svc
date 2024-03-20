@@ -37,7 +37,7 @@ func (s *Server) CreateProduct(ctx context.Context, req *pb.CreateProductRequest
 func (s *Server) FindOne(ctx context.Context, req *pb.FindOneRequest) (*pb.FindOneResponse, error) {
 	var product models.Product
 
-	if result := s.H.DB.First(&product, req.Id); result.Error != nil {
+	if result := s.H.DB.Find(&product, req.Id); result.Error != nil {
 		return &pb.FindOneResponse{
 			Status: http.StatusNotFound,
 			Error:  result.Error.Error(),

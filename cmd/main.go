@@ -5,10 +5,6 @@ import (
 	"log"
 	"net"
 
-	// "github.com/YOUR_USERNAME/go-grpc-product-svc/pkg/config"
-	// "github.com/YOUR_USERNAME/go-grpc-product-svc/pkg/db"
-	// pb "github.com/YOUR_USERNAME/go-grpc-product-svc/pkg/pb"
-	// services "github.com/YOUR_USERNAME/go-grpc-product-svc/pkg/services"
 	"github.com/AnanyaDevGo/microServices-grpc-project_product_svc/pkg/config"
 	"github.com/AnanyaDevGo/microServices-grpc-project_product_svc/pkg/db"
 	"github.com/AnanyaDevGo/microServices-grpc-project_product_svc/pkg/pb"
@@ -17,31 +13,29 @@ import (
 )
 
 func main() {
-    c, err := config.LoadConfig()
+	c, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalln("Failed at config", err)
+	}
 
-    if err != nil {
-        log.Fatalln("Failed at config", err)
-    }
+	h := db.Init(c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName)
 
-    h := db.Init(c.DBUrl)
+	lis, err := net.Listen("tcp", c.Port)
+	if err != nil {
+		log.Fatalln("Failed to listen:", err)
+	}
 
-    lis, err := net.Listen("tcp", c.Port)
+	fmt.Println("Product Svc on", c.Port)
 
-    if err != nil {
-        log.Fatalln("Failed to listing:", err)
-    }
+	s := services.Server{
+		H: h,
+	}
 
-    fmt.Println("Product Svc on", c.Port)
+	grpcServer := grpc.NewServer()
 
-    s := services.Server{
-        H: h,
-    }
+	pb.RegisterProductServiceServer(grpcServer, &s)
 
-    grpcServer := grpc.NewServer()
-
-    pb.RegisterProductServiceServer(grpcServer, &s)
-
-    if err := grpcServer.Serve(lis); err != nil {
-        log.Fatalln("Failed to serve:", err)
-    }
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalln("Failed to serve:", err)
+	}
 }
